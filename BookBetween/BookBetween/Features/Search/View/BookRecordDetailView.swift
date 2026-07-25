@@ -100,11 +100,14 @@ struct BookRecordDetailView: View {
     // MARK: - 책 이미지, 제목
     private var bookHeader: some View {
         HStack(alignment: .center, spacing: 16) {
-            BookCoverImage(book: viewModel.book, placeholderImageName: "book_cover_meeting_1")
+            BookCoverImage(book: viewModel.book, placeholderImageName: "book_cover_0")
+                .scaledToFill()
                 .frame(width: 105.4, height: 160)
                 .clipShape(RoundedRectangle(cornerRadius: 9))
-                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 8)
-
+                .overlay {
+                        RoundedRectangle(cornerRadius: 9)
+                            .strokeBorder(.gray200, lineWidth: 1)
+                }
             VStack(alignment: .leading, spacing: 10) {
                 Text(viewModel.book.title)
                     .head2Style

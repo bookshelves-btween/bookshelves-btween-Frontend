@@ -68,6 +68,8 @@ struct NotificationCardView: View {
             return "icon_check_mark"
         case .meetingStarted:
             return "icon_alert_mark"
+        case .system:
+            return "icon_alert_mark"
         }
     }
 
@@ -78,6 +80,8 @@ struct NotificationCardView: View {
         case .aiSummaryReady:
             return CGSize(width: 28, height: 23)
         case .meetingStarted:
+            return CGSize(width: 25, height: 27)
+        case .system:
             return CGSize(width: 25, height: 27)
         }
     }

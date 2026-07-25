@@ -23,20 +23,24 @@ struct SearchView: View {
     }
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
-                TitleView
-                SearchInputSectionView
-                SearchResultSectionView
+        GeometryReader { geometry in
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    TitleView
+                    SearchInputSectionView
+                    SearchResultSectionView(
+                        idleHeight: max(geometry.size.height - 145, 520)
+                    )
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isSearchFocused = false
+                }
+                .padding(.horizontal, 19)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
             }
-            .scrollDismissesKeyboard(.interactively)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                isSearchFocused = false
-            }
-            .padding(.horizontal, 19)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
         }
         .toolbar(.hidden, for: .navigationBar)
         .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -78,7 +82,7 @@ struct SearchView: View {
         VStack(spacing: 0) {
             SearchBarView
 
-            if !viewModel.recentKeywords.isEmpty {
+            if isSearchFocused && !viewModel.recentKeywords.isEmpty {
                 Divider()
                     .background(.gray200)
                     .padding(.horizontal, 20)
@@ -143,11 +147,13 @@ struct SearchView: View {
         .padding(.bottom, 13)
     }
     
-    private var SearchResultSectionView: some View {
+    private func SearchResultSectionView(idleHeight: CGFloat) -> some View {
         VStack(spacing: 12) {
             if viewModel.isSearching {
                 ProgressView()
                     .padding(.top, 24)
+            } else if !viewModel.hasSearched {
+                SearchIdleView(height: idleHeight)
             } else if viewModel.hasSearched && viewModel.searchResults.isEmpty {
                 Text("검색 결과가 없어요")
                     .body2RegularStyle
@@ -167,6 +173,56 @@ struct SearchView: View {
                     .padding(.vertical, 12)
             }
         }
+    }
+
+    private func SearchIdleView(height: CGFloat) -> some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+
+            ZStack {
+                RadialGradient(
+                    colors: [
+                        Color(hex: "DCEBE1").opacity(0.58),
+                        Color.white.opacity(0)
+                    ],
+                    center: UnitPoint(x: 0.5, y: 0.48),
+                    startRadius: 12,
+                    endRadius: 270
+                )
+
+                Image("leaf_left")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 108)
+                    .position(x: 30, y: height * 0.13)
+
+                Image("leaf_right")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 108)
+                    .position(x: width - 30, y: height * 0.22)
+
+                Image("search_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 152, height: 134)
+                    .position(x: width / 2, y: height * 0.46)
+
+                VStack(spacing: 10) {
+                    Text("원하는 책을 찾아보세요")
+                        .pointText4Style
+                        .foregroundStyle(Color.green900)
+
+                    Text("책 제목, 저자, 키워드로\n쉽고 빠르게 검색할 수 있어요")
+                        .body2RegularStyle
+                        .foregroundStyle(Color.gray600)
+                        .multilineTextAlignment(.center)
+                }
+                .position(x: width / 2, y: height * 0.67)
+            }
+            .allowsHitTesting(false)
+        }
+        .frame(height: height)
     }
 }
 

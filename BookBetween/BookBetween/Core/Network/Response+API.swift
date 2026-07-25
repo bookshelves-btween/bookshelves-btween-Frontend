@@ -35,4 +35,29 @@ extension Response { // 데이터 가공 + 검증
 
         return result
     }
+
+    func validateAPIResponse(
+        decoder: JSONDecoder = JSONDecoder()
+    ) throws {
+        let response: APIResponseDTO<EmptyAPIResultDTO>
+
+        do {
+            response = try decoder.decode(
+                APIResponseDTO<EmptyAPIResultDTO>.self,
+                from: data
+            )
+        } catch let error as DecodingError {
+            throw NetworkError.decoding(error)
+        }
+
+        guard (200..<300).contains(statusCode), response.isSuccess else {
+            throw NetworkError.server(
+                statusCode: statusCode,
+                code: response.code,
+                message: response.message
+            )
+        }
+    }
 }
+
+private struct EmptyAPIResultDTO: Decodable {}

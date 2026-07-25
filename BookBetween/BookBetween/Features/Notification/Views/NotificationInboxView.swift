@@ -11,7 +11,11 @@ struct NotificationInboxView: View {
     @State private var viewModel: NotificationInboxViewModel
 
     init() {
-        _viewModel = State(initialValue: NotificationInboxViewModel())
+        _viewModel = State(
+            initialValue: NotificationInboxViewModel(
+                service: NotificationService.stubbed()
+            )
+        )
     }
 
     init(viewModel: NotificationInboxViewModel) {
@@ -41,6 +45,31 @@ struct NotificationInboxView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .overlay {
+            if viewModel.isLoading && viewModel.notifications.isEmpty {
+                ProgressView()
+            }
+        }
+        .task {
+            await viewModel.start()
+        }
+        .alert(
+            "알림을 불러오지 못했습니다.",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.errorMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button("확인", role: .cancel) {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 
     private var navigationHeader: some View {
@@ -70,7 +99,24 @@ struct NotificationInboxView: View {
         ScrollView(showsIndicators: false) {
             LazyVStack(spacing: 12) {
                 ForEach(viewModel.notifications) { notification in
-                    NotificationCardView(item: notification)
+                    Button {
+                        Task {
+                            await viewModel.markAsRead(notification)
+                        }
+                    } label: {
+                        NotificationCardView(item: notification)
+                    }
+                    .buttonStyle(.plain)
+                    .task {
+                        await viewModel.loadNextPageIfNeeded(
+                            currentItem: notification
+                        )
+                    }
+                }
+
+                if viewModel.isLoadingNextPage {
+                    ProgressView()
+                        .padding(.vertical, 12)
                 }
             }
             .padding(.horizontal, 20)

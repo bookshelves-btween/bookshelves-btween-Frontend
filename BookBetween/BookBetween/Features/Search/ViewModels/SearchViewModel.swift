@@ -43,7 +43,11 @@ final class SearchViewModel {
 
     func submitSearch() async {
         let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !keyword.isEmpty, !isSearching else { return }
+        guard !keyword.isEmpty else {
+            resetSearch()
+            return
+        }
+        guard !isSearching else { return }
 
         isSearching = true
         errorMessage = nil
@@ -104,5 +108,15 @@ final class SearchViewModel {
 
     func removeRecentKeyword(_ keyword: String) {
         recentKeywords.removeAll { $0 == keyword }
+    }
+
+    private func resetSearch() {
+        searchText = ""
+        searchResults = []
+        currentPage = 0
+        hasNext = false
+        submittedQuery = ""
+        hasSearched = false
+        errorMessage = nil
     }
 }
